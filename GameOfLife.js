@@ -6,80 +6,77 @@ class GameOfLife {
   }
 
   makeBoard() {
-    // Generate multi-dimensional array:
-    return new Array(this.height).fill().map(() => new Array(this.width).fill(0));
+    const board = [];
+    for (let row = 0; row < this.height; row++) {
+      board.push(new Array(this.width).fill(0));
+    }
+    return board;
   }
 
-  cellExists(row, col) {
+  inBounds(row, col) {
     return row >= 0 && row < this.height && col >= 0 && col < this.width;
   }
 
   getCell(row, col) {
-    if (this.cellExists(row, col)) {
-      return this.board[row][col];
-    } else {
-      return 0;
-    }
+    row = Number(row);
+    col = Number(col);
+    return this.inBounds(row, col) ? this.board[row][col] : 0;
   }
 
   setCell(value, row, col) {
-    if (this.cellExists(row, col)) {
+    row = Number(row);
+    col = Number(col);
+    if (this.inBounds(row, col)) {
       this.board[row][col] = value;
     }
   }
 
   toggleCell(row, col) {
-    this.setCell(1 - this.getCell(row, col), row, col);
+    row = Number(row);
+    col = Number(col);
+    if (this.inBounds(row, col)) {
+      this.board[row][col] = this.board[row][col] === 1 ? 0 : 1;
+    }
   }
 
-  forEachCell(iterator) {
+  forEachCell(callback) {
     for (let row = 0; row < this.height; row++) {
       for (let col = 0; col < this.width; col++) {
-        iterator(row, col);
+        callback(row, col);
       }
     }
   }
 
   livingNeighbors(row, col) {
-    return (
-      // Row Above
-      this.getCell(row - 1, col - 1) +
-      this.getCell(row - 1, col) +
-      this.getCell(row - 1, col + 1) +
-      // Directly to left and right
-      this.getCell(row, col - 1) +
-      this.getCell(row, col + 1) +
-      // Row Below
-      this.getCell(row + 1, col - 1) +
-      this.getCell(row + 1, col) +
-      this.getCell(row + 1, col + 1)
-    );
-  }
-
-  conwayRule(cell, livingNeighbors) {
-    let isAlive = cell === 1;
-    if (isAlive) {
-      if (livingNeighbors === 2 || livingNeighbors === 3) {
-        return 1;
-      } else {
-        return 0;
+    const directions = [
+      [-1, -1], [-1, 0], [-1, 1],
+      [0, -1],          [0, 1],
+      [1, -1], [1, 0], [1, 1],
+    ];
+    let count = 0;
+    for (const [dx, dy] of directions) {
+      const r = Number(row) + dx;
+      const c = Number(col) + dy;
+      if (this.inBounds(r, c)) {
+        count += this.board[r][c];
       }
-    } else if (livingNeighbors === 3) {
-      return 1;
-    } else {
-      return 0;
     }
+    return count;
   }
 
   tick() {
     const newBoard = this.makeBoard();
-
-    this.forEachCell((row, col) => {
-      const livingNeighbors = this.livingNeighbors(row, col);
-      const nextCell = this.conwayRule(this.getCell(row, col), livingNeighbors);
-      newBoard[row][col] = nextCell;
-    })
-    
+    for (let row = 0; row < this.height; row++) {
+      for (let col = 0; col < this.width; col++) {
+        const alive = this.board[row][col];
+        const neighbors = this.livingNeighbors(row, col);
+        if (alive === 1) {
+          newBoard[row][col] = neighbors === 2 || neighbors === 3 ? 1 : 0;
+        } else {
+          newBoard[row][col] = neighbors === 3 ? 1 : 0;
+        }
+      }
+    }
     this.board = newBoard;
   }
 }

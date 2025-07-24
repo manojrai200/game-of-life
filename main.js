@@ -1,13 +1,8 @@
 const width = 25;
 const height = 20;
-
-// Create Game of Life instance
 const gol = new GameOfLife(width, height);
+const tds = [];
 
-// Actual table cells
-const cells = [];
-
-// Create Table
 const table = document.createElement("tbody");
 for (let h = 0; h < height; h++) {
   const tr = document.createElement("tr");
@@ -15,29 +10,29 @@ for (let h = 0; h < height; h++) {
     const td = document.createElement("td");
     td.dataset.row = h;
     td.dataset.col = w;
-    cells.push(td);
+    tds.push(td);
     tr.append(td);
   }
   table.append(tr);
 }
 document.getElementById("board").append(table);
 
-
 const paint = () => {
-  cells.forEach(td => {
-    const cellValue = gol.getCell(td.dataset.row, td.dataset.col);
-    if (cellValue === 1) {
-      td.classList.add("alive");
-    } else {
-      td.classList.remove("alive");
-    }
+  tds.forEach(td => {
+    const row = td.dataset.row;
+    const col = td.dataset.col;
+    td.classList.toggle("alive", gol.getCell(row, col) === 1);
   });
-}
+};
 
-// Add event Listeners
-document.getElementById("board").addEventListener("click", (event) => {
-  gol.toggleCell(event.target.dataset.row, event.target.dataset.col);
-  paint();
+document.getElementById("board").addEventListener("click", event => {
+  const td = event.target;
+  if (td.tagName === "TD") {
+    const row = td.dataset.row;
+    const col = td.dataset.col;
+    gol.toggleCell(row, col);
+    paint();
+  }
 });
 
 document.getElementById("step_btn").addEventListener("click", () => {
@@ -58,16 +53,16 @@ document.getElementById("play_btn").addEventListener("click", () => {
   }
 });
 
-document.getElementById("reset_btn").addEventListener("click", () => {
+document.getElementById("random_btn").addEventListener("click", () => {
   gol.forEachCell((row, col) => {
-    gol.setCell(Math.round(Math.random()), row, col);
-  })
+    gol.setCell(Math.random() < 0.3 ? 1 : 0, row, col);
+  });
   paint();
 });
 
 document.getElementById("clear_btn").addEventListener("click", () => {
   gol.forEachCell((row, col) => {
     gol.setCell(0, row, col);
-  })
+  });
   paint();
 });
